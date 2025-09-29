@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>13</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <RootNamespace>Maynard</RootNamespace>
+        <AssemblyName>maynard-flex-json</AssemblyName>
+        <PackageId>maynard-flex-json</PackageId>
+        <Title>FlexJson</Title>
+        <Authors>Will Maynard</Authors>
+        <Copyright>Will Maynard 2025</Copyright>
+        <PackageProjectUrl>https://github.com/wmaynard/flex-json</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/wmaynard/flex-json/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/wmaynard/flex-json</RepositoryUrl>
+        <Company>Will Maynard</Company>
+        <Product>FlexJson</Product>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+    </PropertyGroup>
+
+</Project>
