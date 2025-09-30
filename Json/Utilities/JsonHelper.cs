@@ -17,10 +17,10 @@ public static class JsonHelper
     {
         // options.JsonSerializerOptions.IgnoreNullValues = JsonHelper.SerializerOptions.IgnoreNullValues;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-        options.JsonSerializerOptions.IncludeFields = JsonHelper.SerializerOptions.IncludeFields;
-        options.JsonSerializerOptions.IgnoreReadOnlyFields = JsonHelper.SerializerOptions.IgnoreReadOnlyFields;
-        options.JsonSerializerOptions.IgnoreReadOnlyProperties = JsonHelper.SerializerOptions.IgnoreReadOnlyProperties;
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonHelper.SerializerOptions.PropertyNamingPolicy;
+        options.JsonSerializerOptions.IncludeFields = SerializerOptions.IncludeFields;
+        options.JsonSerializerOptions.IgnoreReadOnlyFields = SerializerOptions.IgnoreReadOnlyFields;
+        options.JsonSerializerOptions.IgnoreReadOnlyProperties = SerializerOptions.IgnoreReadOnlyProperties;
+        options.JsonSerializerOptions.PropertyNamingPolicy = SerializerOptions.PropertyNamingPolicy;
         options.JsonSerializerOptions.AllowTrailingCommas = true;
         options.JsonSerializerOptions.Converters.Add(new JsonTypeConverter());
 
@@ -29,7 +29,7 @@ public static class JsonHelper
 
         // As a side effect of dropping Newtonsoft and switching to System.Text.Json, nothing until this point can be reliably serialized to JSON.
         // It throws errors when trying to serialize certain types and breaks the execution to do it.
-        Log.Verbose("JSON serializer options configured.").Wait();
+        Log.Verbose("JSON serializer options configured.");
         // options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
     }
 
@@ -123,7 +123,7 @@ public static class JsonHelper
                 Element = element,
                 AttemptedType = typeof(T).Name,
                 Exception = e
-            }).Wait();
+            });
             return Throw.Ex<T>(e);
         }
     }

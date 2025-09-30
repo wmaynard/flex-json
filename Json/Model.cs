@@ -52,7 +52,7 @@ public abstract class Model
         }
         catch (Exception e)
         {
-            Log.Error(e.Message).Wait();
+            Log.Error(e.Message);
             return null;
         }
     }
@@ -154,7 +154,7 @@ public abstract class Model
                 // Unsure the best method of registering these, but further investigation needed.  For now just exit early.
                 if (type.ContainsGenericParameters)
                 {
-                    Log.Warn($"Unable to register {type.FullName} with Mongo; it uses a nested generic type constraint.").Wait();
+                    Log.Warn($"Unable to register {type.FullName} with Mongo; it uses a nested generic type constraint.");
                     continue;
                 }
 
@@ -167,16 +167,16 @@ public abstract class Model
                 {
                     Name = type.FullName,
                     Exception = e
-                }).Wait();
+                });
             }
         
         if (unregisteredTypes.Any())
             Log.Warn("Some Models were not able to be registered.", data: new
             { 
                 Types = unregisteredTypes
-            }).Wait();
+            });
         
-        Log.Verbose("Registered Models with Mongo.").Wait();
+        Log.Verbose("Registered Models with Mongo.");
         RegisterSerializer(models);
     }
 
@@ -194,7 +194,7 @@ public abstract class Model
     {
         if (_serializerRegistered)
         {
-            Log.Warn("Already created an object serializer.  Ignoring subsequent calls.").Wait();
+            Log.Warn("Already created an object serializer.  Ignoring subsequent calls.");
             return;
         }
         try
@@ -227,11 +227,11 @@ public abstract class Model
             Log.Verbose("Object serializer registered.", data: new
             {
                 Types = models.Select(type => type.Name)
-            }).Wait();
+            });
         }
         catch (Exception e)
         {
-            Log.Error("Unable to create a BsonSerializer!  In 2.19.0+, this can mean that your serialization will fail!", exception: e).Wait();
+            Log.Error("Unable to create a BsonSerializer!  In 2.19.0+, this can mean that your serialization will fail!", data: e);
         }
     }
     

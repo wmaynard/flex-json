@@ -12,6 +12,11 @@ namespace Maynard.Json;
 
 public class FlexJson : IDictionary<string, object>
 {
+    /// <summary>
+    /// Configures FlexJson log behavior.  Without capturing the log events, some logging events may throw exceptions.
+    /// </summary>
+    /// <param name="onLog">The action to perform when a log event is fired.</param>
+    public static void Configure(Action<FlexJsonLogEventArgs> onLog) => Log.OnLog += (_, args) => onLog?.Invoke(args);
     public static bool ValidateOnDeserialize { get; set; }
     public static bool SanitizeStringsOnDeserialize { get; set; }
 
@@ -216,7 +221,7 @@ public class FlexJson : IDictionary<string, object>
             {
                 SourceType = dict.GetType().FullName,
                 Exception = e
-            }).Wait();
+            });
             return null;
         }
     }
@@ -262,7 +267,7 @@ public class FlexJson : IDictionary<string, object>
                     {
                         Json = element,
                         Exception = ex
-                    }).Wait();
+                    });
                     return null;
                 }
                 case JsonValueKind.String:
@@ -279,7 +284,7 @@ public class FlexJson : IDictionary<string, object>
             {
                 Json = element,
                 Exception = ex
-            }).Wait();
+            });
             return null;
         }
     }
@@ -479,7 +484,7 @@ public class FlexJson : IDictionary<string, object>
             }
             catch (Exception e)
             {
-                Log.Error("Unable to deserialize Model from JSON.", exception: e).Wait();
+                Log.Error("Unable to deserialize Model from JSON.", e);
             }
 
         // Even though Rider grays out the (T) as if it's irrelevant code, this is not the case because the return type is dynamic.
@@ -523,7 +528,7 @@ public class FlexJson : IDictionary<string, object>
                 {
                     OutputType = typeof(T).FullName,
                     Exception = e
-                }).Wait();
+                });
             }
             catch (Exception e)
             {
@@ -531,7 +536,7 @@ public class FlexJson : IDictionary<string, object>
                 {
                     OutputType = typeof(T).FullName,
                     Exception = e
-                }).Wait();
+                });
             }
 
             // This is a very frustrating special case.  Without this, the cast of (T) value in the below switch statement will fail,
@@ -587,7 +592,7 @@ public class FlexJson : IDictionary<string, object>
                 Type = type,
                 Value = value,
                 Exception = e
-            }).Wait();
+            });
             return default;
         }
     }
@@ -605,7 +610,7 @@ public class FlexJson : IDictionary<string, object>
     /// information to properly serialize JSON <-> BSON.  Use Assembly.GetExecutingAssembly().GetExportedTypes() here.</param>
     /// <param name="autoTrimStrings">If set to true, strings will automatically be trimmed when using Require<T>() and Optional<T>().</param>
     /// <exception cref="Exception">If you've previously initialized FlexJson library, you'll receive an Exception from the second call.</exception>
-    public static void Initialize(Action<Exception> exception, Action<LogEventArgs> log, IEnumerable<Type> exportedTypes = null, bool autoTrimStrings = true)
+    public static void Initialize(Action<Exception> exception, Action<FlexJsonLogEventArgs> log, IEnumerable<Type> exportedTypes = null, bool autoTrimStrings = true)
     {
         if (IsInitialized)
             throw new Exception("Already initialized.");

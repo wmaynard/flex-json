@@ -33,7 +33,7 @@ public class BsonGenericConverter : SerializerBase<FlexJson>
                     {
                         State = reader.State,
                         CurrentBsonType = reader.CurrentBsonType
-                    }).Wait();
+                    });
                     goto case BsonType.Document;
                 case BsonType.Boolean:
                 case BsonType.Binary:
@@ -56,7 +56,7 @@ public class BsonGenericConverter : SerializerBase<FlexJson>
                     {
                         State = reader.State,
                         CurrentBsonType = reader.CurrentBsonType
-                    }).Wait();
+                    });
                     goto case BsonType.Document;
                 default:
                     return Throw.Ex<FlexJson>(new ConverterException($"Unable to deserialize from BsonBinaryReader: {reader.State}.", typeof(FlexJson), onDeserialize: true));

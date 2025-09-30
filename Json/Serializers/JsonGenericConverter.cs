@@ -214,7 +214,7 @@ public class JsonGenericConverter : JsonConverter<FlexJson>
                         Information = "A custom data type was likely passed into a FlexJson object and JSON may not have serialized as expected.",
                         DataType = value.GetType(),
                         Message = e?.Message
-                    }).Wait();
+                    });
                     throw;
                 }
                 break;
