@@ -37,7 +37,7 @@ internal static class Log
     internal static void Critical(string message, object data = null) => OnLog?.Invoke(null, new()
     {
         Message = message,
-        Severity = FlexJsonLogEventArgs.CRITICAL,
+        Severity = FlexJsonLogEventArgs.ALERT,
         Data = data
     });
     
@@ -51,7 +51,7 @@ internal static class Log
     
     private static void Fire(FlexJsonLogEventArgs args)
     {
-        bool unhandled = OnLog == null && (args.Severity is FlexJsonLogEventArgs.ERROR or FlexJsonLogEventArgs.CRITICAL);
+        bool unhandled = OnLog == null && (args.Severity is FlexJsonLogEventArgs.ERROR or FlexJsonLogEventArgs.ALERT);
         if (unhandled)
             throw new UnhandledFlexJsonLogEventException("Unhandled error-level FlexJson log event.", args);
         OnLog?.Invoke(null, args);

@@ -62,15 +62,12 @@ public static class JsonHelper
             {
                 static jsonTypeInfo =>
                 {
-                    if (typeof(FlexJson).IsAssignableFrom(jsonTypeInfo.Type))
-                    {
-                        IList<JsonPropertyInfo> properties = jsonTypeInfo.Properties;
-                        for (int i = 0; i < properties.Count; i++)
-                        {
-                            if (properties[i].PropertyType.IsGenericType && properties[i].PropertyType.GetGenericTypeDefinition() == typeof(IObservable<>))
-                                jsonTypeInfo.Properties.RemoveAt(i--);
-                        }
-                    }
+                    if (!typeof(FlexJson).IsAssignableFrom(jsonTypeInfo.Type)) 
+                        return;
+                    IList<JsonPropertyInfo> properties = jsonTypeInfo.Properties;
+                    for (int i = 0; i < properties.Count; i++)
+                        if (properties[i].PropertyType.IsGenericType && properties[i].PropertyType.GetGenericTypeDefinition() == typeof(IObservable<>))
+                            jsonTypeInfo.Properties.RemoveAt(i--);
                 }
                 
             }

@@ -23,27 +23,6 @@ public abstract class Model
     /// While it may be necessary to override this property in some cases, this should help enforce consistency
     /// across services.
     /// </summary>
-    [BsonIgnore]
-    [JsonIgnore] // Required to avoid circular references during serialization
-    public virtual FlexJson ResponseObject
-    {
-        get
-        {
-            string name = GetType().Name;
-
-            if (name.Length > 0)
-                name = $"{name[0..1].ToLower()}{name[1..]}";
-            
-            return new FlexJson
-            {
-                {
-                    name, this
-                }
-            };
-        }
-    }
-    // [BsonIgnore]
-    // [JsonIgnore]
     public string ToJson()
     {
         try

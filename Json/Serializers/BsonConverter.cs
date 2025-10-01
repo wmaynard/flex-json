@@ -172,7 +172,7 @@ public class BsonGenericConverter : SerializerBase<FlexJson>
                 writer.WriteNull();
                 break;
             default:
-                Throw.Ex<object>(new ConverterException($"Unexpected datatype.", value.GetType()));
+                throw new ConverterException($"Unexpected datatype: {value.GetType().FullName}. Unable to serialize.", value.GetType());
                 break;
         }
     }

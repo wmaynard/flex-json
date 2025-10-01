@@ -19,12 +19,6 @@ public class FlexJson : IDictionary<string, object>
     public static void Configure(Action<FlexJsonLogEventArgs> onLog) => Log.OnLog += (_, args) => onLog?.Invoke(args);
     public static bool ValidateOnDeserialize { get; set; }
     public static bool SanitizeStringsOnDeserialize { get; set; }
-
-    public FlexJson()
-    {
-        if (!IsInitialized)
-            throw new Exception("FlexJson has not yet been initialized.  This must be called at the beginning of startup.");
-    }
     
     #region Threadsafe Implementation
     // The week of 2023.04.03, we began to see corrupted states in FlexJson objects.
@@ -34,7 +28,7 @@ public class FlexJson : IDictionary<string, object>
     // Consequently, we needed an update to make FlexJson threadsafe.  Implementing IDictionary instead and locking
     // an object before performing operations works like a charm (from initial testing).
     
-    private object _door = new();
+    private Lock _door = new();
     private Dictionary<string, object> _dict = new();
     public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
     {
@@ -598,31 +592,7 @@ public class FlexJson : IDictionary<string, object>
     }
 
     public override string ToString() => Json;
-    
-    private static bool IsInitialized { get; set; }
 
-    /// <summary>
-    /// You must pass FlexJson some information in order to use it; without a call here you will only see exceptions from the class.
-    /// </summary>
-    /// <param name="exception">A defined action to take when Exceptions are encountered.  Necessary for error handling.</param>
-    /// <param name="log">A defined action to take when FlexJson wants to issue a log.</param>
-    /// <param name="exportedTypes">Optional.  If using FlexJson as a nested nuget library, you may want to pass in Type
-    /// information to properly serialize JSON <-> BSON.  Use Assembly.GetExecutingAssembly().GetExportedTypes() here.</param>
-    /// <param name="autoTrimStrings">If set to true, strings will automatically be trimmed when using Require<T>() and Optional<T>().</param>
-    /// <exception cref="Exception">If you've previously initialized FlexJson library, you'll receive an Exception from the second call.</exception>
-    public static void Initialize(Action<Exception> exception, Action<FlexJsonLogEventArgs> log, IEnumerable<Type> exportedTypes = null, bool autoTrimStrings = true)
-    {
-        if (IsInitialized)
-            throw new Exception("Already initialized.");
-
-        IsInitialized = true;
-        Throw.OnException += (_, ex) => exception?.Invoke(ex);
-        SanitizeStringsOnDeserialize = autoTrimStrings;
-
-        Type[] imported = exportedTypes?.ToArray() ?? Array.Empty<Type>();
-        
-        Model.RegisterModelsWithMongo(imported);
-    }
 
     public string ToJson() => Json;
 }
