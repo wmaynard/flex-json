@@ -27,7 +27,7 @@ public abstract class Model
     {
         try
         {
-            return JsonSerializer.Serialize(this, GetType(), JsonHelper.SerializerOptions);
+            return JsonSerializer.Serialize(this, typeof(Model), JsonHelper.SerializerOptions);
         }
         catch (Exception e)
         {

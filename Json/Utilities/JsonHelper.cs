@@ -51,7 +51,8 @@ public static class JsonHelper
         {
             new JsonTypeConverter(),
             new JsonExceptionConverter(),
-            new JsonGenericConverter()
+            new JsonGenericConverter(),
+            new JsonFlexConverter(),
             // new JsonShortConverter(), // These numeric converters are required because otherwise, System.Text.Json
             // new JsonIntConverter(),   // fails deserialization on values where quote marks are in the JSON, like '"313"'.
             // new JsonLongConverter()   // e.g. JsonSerializer.Deserialize<int>("\"313\"", SerializerOptions).

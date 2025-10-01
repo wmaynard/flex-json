@@ -32,7 +32,7 @@ public class FlexKeysBsonSerializer<T> : SerializerBase<T> where T : class, new(
             {
                 _bsonToProperty[flexKeys.Bson] = prop;
                 _propertyToBson[prop] = flexKeys.Bson;
-                _propertyPreserveNulls[prop] = flexKeys.PreserveNulls;
+                _propertyPreserveNulls[prop] = !flexKeys.Ignore.HasFlag(FlexIgnore.WhenBsonNull);
             }
             else if (bsonId != null)
             {
@@ -56,7 +56,7 @@ public class FlexKeysBsonSerializer<T> : SerializerBase<T> where T : class, new(
 
             // Get or create serializer for property type
             _propertySerializers[prop] = bsonId != null
-                ? BsonSerializer.LookupSerializer(typeof(ObjectId))
+                ? BsonSerializer.LookupSerializer<ObjectId>()
                 : BsonSerializer.LookupSerializer(prop.PropertyType);
         }
     }
