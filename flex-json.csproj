@@ -25,4 +25,8 @@
       <PackageReference Include="System.Text.Json" Version="9.0.9" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include=".github\workflows\dotnet-desktop.yml" />
+    </ItemGroup>
+
 </Project>
