@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Maynard.Extensions;
 using Maynard.Json.Exceptions;
 using Maynard.Json.Serializers;
 using Maynard.Logging;
@@ -10,7 +11,7 @@ namespace Maynard.Json.Utilities;
 
 public static class JsonHelper
 {
-    private static JsonSerializerOptions _serializerOptions;
+    // private static JsonSerializerOptions _serializerOptions;
     private static JsonDocumentOptions _documentOptions;
 
     public static void ConfigureJsonOptions(JsonOptions options)
@@ -33,9 +34,9 @@ public static class JsonHelper
         // options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
     }
 
-    public static JsonSerializerOptions SerializerOptions => _serializerOptions ??= new()
+    public static JsonSerializerOptions PrettyPrintingOptions { get; } = new()
     {
-        // IgnoreNullValues = false,
+        WriteIndented = true,
         AllowTrailingCommas = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
         IncludeFields = true,
@@ -46,16 +47,12 @@ public static class JsonHelper
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         ReadCommentHandling = JsonCommentHandling.Skip,
         UnknownTypeHandling = JsonUnknownTypeHandling.JsonElement,
-        // UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
         Converters =
         {
             new JsonTypeConverter(),
             new JsonExceptionConverter(),
             new JsonGenericConverter(),
-            new JsonFlexConverter(),
-            // new JsonShortConverter(), // These numeric converters are required because otherwise, System.Text.Json
-            // new JsonIntConverter(),   // fails deserialization on values where quote marks are in the JSON, like '"313"'.
-            // new JsonLongConverter()   // e.g. JsonSerializer.Deserialize<int>("\"313\"", SerializerOptions).
+            new JsonFlexConverter()
         },
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
@@ -70,7 +67,44 @@ public static class JsonHelper
                         if (properties[i].PropertyType.IsGenericType && properties[i].PropertyType.GetGenericTypeDefinition() == typeof(IObservable<>))
                             jsonTypeInfo.Properties.RemoveAt(i--);
                 }
-                
+        
+            }
+        }
+    };
+
+    public static JsonSerializerOptions SerializerOptions { get; } = new()
+    {
+        AllowTrailingCommas = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+        IncludeFields = true,
+        IgnoreReadOnlyFields = false,
+        IgnoreReadOnlyProperties = false,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+        PreferredObjectCreationHandling = JsonObjectCreationHandling.Replace,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        UnknownTypeHandling = JsonUnknownTypeHandling.JsonElement,
+        Converters =
+        {
+            new JsonTypeConverter(),
+            new JsonExceptionConverter(),
+            new JsonGenericConverter(),
+            new JsonFlexConverter()
+        },
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver
+        {
+            Modifiers =
+            {
+                static jsonTypeInfo =>
+                {
+                    if (!typeof(FlexJson).IsAssignableFrom(jsonTypeInfo.Type)) 
+                        return;
+                    IList<JsonPropertyInfo> properties = jsonTypeInfo.Properties;
+                    for (int i = 0; i < properties.Count; i++)
+                        if (properties[i].PropertyType.IsGenericType && properties[i].PropertyType.GetGenericTypeDefinition() == typeof(IObservable<>))
+                            jsonTypeInfo.Properties.RemoveAt(i--);
+                }
+        
             }
         }
     };
