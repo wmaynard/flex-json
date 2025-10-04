@@ -6,8 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <RootNamespace>Maynard</RootNamespace>
-        <AssemblyName>maynard-flex-json</AssemblyName>
-        <PackageId>maynard-flex-json</PackageId>
+        <AssemblyName>Maynard.FlexJson</AssemblyName>
+        <PackageId>Maynard.FlexJson</PackageId>
         <Title>FlexJson</Title>
         <Authors>Will Maynard</Authors>
         <Copyright>Will Maynard 2025</Copyright>

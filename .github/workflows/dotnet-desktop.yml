@@ -35,6 +35,6 @@ jobs:
         with:
           owner: 'wmaynard'
           repo: 'flex-json'
-          package-name: 'maynard-flex-json'
+          package-name: 'Maynard.FlexJson'
           token: ${{ secrets.PAT }}
           min-versions-to-keep: 10
