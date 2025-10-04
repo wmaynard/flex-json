@@ -16,7 +16,11 @@ public class FlexJson : IDictionary<string, object>
     /// Configures FlexJson log behavior.  Without capturing the log events, some logging events may throw exceptions.
     /// </summary>
     /// <param name="onLog">The action to perform when a log event is fired.</param>
-    public static void Configure(Action<FlexJsonLogEventArgs> onLog) => Log.OnLog += (_, args) => onLog?.Invoke(args);
+    public static void Configure(Action<FlexJsonLogEventArgs> onLog, bool validate = false)
+    {
+        Log.OnLog += (_, args) => onLog?.Invoke(args);
+        ValidateOnDeserialize = validate;
+    }
     public static bool ValidateOnDeserialize { get; set; }
     public static bool SanitizeStringsOnDeserialize { get; set; }
     

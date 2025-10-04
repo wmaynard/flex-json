@@ -18,6 +18,7 @@
         <Product>FlexJson</Product>
         <AssemblyVersion>1.0.0</AssemblyVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Description>A saner way to work with JSON, especially within the context of working with MongoDB.</Description>
     </PropertyGroup>
 
     <ItemGroup>
@@ -29,5 +30,18 @@
     <ItemGroup>
       <Content Include=".github\workflows\dotnet-desktop.yml" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+    <Target Name="PushToNuGet" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
+        <Exec Command="dotnet nuget push $(PackageOutputPath)\*.nupkg --skip-duplicate --api-key $(NugetApiKey) --source https://api.nuget.org/v3/index.json" />
+    </Target>
+
 
 </Project>
