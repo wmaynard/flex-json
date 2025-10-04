@@ -1,3 +1,4 @@
+using System.Globalization;
 using Maynard.Json.Utilities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -24,7 +25,7 @@ public class BsonSaveAsString : BsonSerializerAttribute
             BsonType.Null => null,
             BsonType.String => context.Reader.ReadString(),
             BsonType.DateTime => context.Reader.ReadDateTime().ToString(),
-            BsonType.Double => context.Reader.ReadDouble().ToString(),
+            BsonType.Double => context.Reader.ReadDouble().ToString(CultureInfo.InvariantCulture),
             BsonType.Timestamp => context.Reader.ReadTimestamp().ToString(),
             _ => Throw.Ex<string>(new NotImplementedException())
         };

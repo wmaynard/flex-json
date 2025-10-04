@@ -62,7 +62,7 @@ public class BsonGenericConverter : SerializerBase<FlexJson>
                     return Throw.Ex<FlexJson>(new ConverterException($"Unable to deserialize from BsonBinaryReader: {reader.State}.", typeof(FlexJson), onDeserialize: true));
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return Throw.Ex<FlexJson>(new ConverterException($"Unable to deserialize from BsonBinaryReader: {reader?.State}.", typeof(FlexJson), onDeserialize: true));
         }
@@ -173,7 +173,6 @@ public class BsonGenericConverter : SerializerBase<FlexJson>
                 break;
             default:
                 throw new ConverterException($"Unexpected datatype: {value.GetType().FullName}. Unable to serialize.", value.GetType());
-                break;
         }
     }
     #endregion WRITE

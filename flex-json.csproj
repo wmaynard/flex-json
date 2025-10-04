@@ -16,9 +16,11 @@
         <RepositoryUrl>https://github.com/wmaynard/flex-json</RepositoryUrl>
         <Company>Will Maynard</Company>
         <Product>FlexJson</Product>
-        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <AssemblyVersion>1.0.1</AssemblyVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Description>A saner way to work with JSON, especially within the context of working with MongoDB.</Description>
+        <Version>1.0.1</Version>
+        <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -37,6 +39,10 @@
     
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Update="icon.png">
+          <Pack>True</Pack>
+          <PackagePath></PackagePath>
+        </None>
     </ItemGroup>
 
     <Target Name="PushToNuGet" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">

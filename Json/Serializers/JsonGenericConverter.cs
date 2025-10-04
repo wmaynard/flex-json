@@ -67,7 +67,7 @@ public class JsonGenericConverter : JsonConverter<FlexJson>
                     output[key] = null;
                     break;
                 case JsonTokenType.String:
-                    output[key] = FlexJson.SanitizeStringsOnDeserialize
+                    output[key] = FlexJson.TrimStringsOnDeserialize
                         ? reader.GetString()?.Trim()
                         : reader.GetString();
                     break;
@@ -112,7 +112,7 @@ public class JsonGenericConverter : JsonConverter<FlexJson>
                     output.Add(null);
                     break;
                 case JsonTokenType.String:
-                    output.Add(FlexJson.SanitizeStringsOnDeserialize
+                    output.Add(FlexJson.TrimStringsOnDeserialize
                         ? reader.GetString()?.Trim()
                         : reader.GetString()
                     );

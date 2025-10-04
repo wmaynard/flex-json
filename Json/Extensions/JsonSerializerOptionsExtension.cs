@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Maynard.Extensions;
+namespace Maynard.Json.Extensions;
 
 public static class JsonSerializerOptionsExtension
 {

@@ -1,18 +1,15 @@
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Maynard.Json.Exceptions;
 using Maynard.Json.Utilities;
 using Maynard.Logging;
 using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.Serializers;
 
 namespace Maynard.Json;
 
 public abstract class Model
 {
-    protected Model() { }
     /// <summary>
     /// A self-containing wrapper for use in generating JSON responses for models.  All models should
     /// contain their data in a JSON field using their own name.  For example, if we have an object Foo, the JSON
@@ -37,8 +34,9 @@ public abstract class Model
     }
 
     /// <summary>
-    /// This is called automatically when a model is deserialized from Require<T> or Optional<T>.
-    /// You may overload the method Validate(out List<string> errors).  If you do, and there are any
+    /// This is called automatically when a model is deserialized from <see cref="FlexJson.Require{T}" /> or
+    /// <see cref="FlexJson.Optional{T}" />.
+    /// You may overload the method Validate(out <see cref="List{string}" /> errors).  If you do, and there are any
     /// errors in the out List, this method throws an exception when deserializing.
     /// </summary>
     public void Validate()
@@ -120,7 +118,7 @@ public abstract class Model
             .Where(type => !type.IsAbstract)
             .Where(type => type.IsAssignableTo(typeof(Model)))
             .ToArray()
-        ?? Array.Empty<Type>();
+        ?? [];
 
         List<string> unregisteredTypes = new List<string>();
         foreach (Type type in models)
@@ -162,7 +160,7 @@ public abstract class Model
     private static bool _serializerRegistered;
     /// <summary>
     /// This is a critical fix for a breaking change introduced in Mongo's C# driver v2.19.  Without this, models can fail
-    /// de/serialization when they use custom types, or collections of custom types.  It's an insane change that's poorly documented,
+    /// de/serialization when they use custom types or collections of custom types.  It's an insane change that's poorly documented
     /// and likely an overcorrection of some edge case they had with remote code execution.  The driver upgrade began disallowing
     /// types that we have to now manually whitelist via an ObjectSerializer definition.
     ///

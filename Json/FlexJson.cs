@@ -16,13 +16,22 @@ public class FlexJson : IDictionary<string, object>
     /// Configures FlexJson log behavior.  Without capturing the log events, some logging events may throw exceptions.
     /// </summary>
     /// <param name="onLog">The action to perform when a log event is fired.</param>
+    /// <param name="validate">If true, validates FlexJson Models on deserialization.</param>
     public static void Configure(Action<FlexJsonLogEventArgs> onLog, bool validate = false)
     {
         Log.OnLog += (_, args) => onLog?.Invoke(args);
         ValidateOnDeserialize = validate;
     }
+    /// <summary>
+    /// If true, any model that's deserialized will run its <see cref="Model.Validate"/> method.  If that model fails
+    /// its validation, a <see cref="ModelValidationException" /> will be thrown.
+    /// </summary>
     public static bool ValidateOnDeserialize { get; set; }
-    public static bool SanitizeStringsOnDeserialize { get; set; }
+    
+    /// <summary>
+    /// If true, any string values that are deserialized will be trimmed of leading and trailing whitespace.
+    /// </summary>
+    public static bool TrimStringsOnDeserialize { get; set; }
     
     #region Threadsafe Implementation
     // The week of 2023.04.03, we began to see corrupted states in FlexJson objects.
@@ -34,48 +43,75 @@ public class FlexJson : IDictionary<string, object>
     
     private Lock _door = new();
     private Dictionary<string, object> _dict = new();
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.GetEnumerator"/>.  This is a threadsafe implementation.
+    /// </summary>
     public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
     {
         lock (_door)
             return _dict.GetEnumerator();
     }
 
+    /// <summary>
+    /// See <see cref="IEnumerable.GetEnumerator"/>.  This is a threadsafe implementation.
+    /// </summary>
     IEnumerator IEnumerable.GetEnumerator()
     {
         lock (_door)
             return _dict.GetEnumerator();
     }
 
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.Add(KeyValuePair{TKey, TValue})"/>.  This is a threadsafe implementation.
+    /// </summary>
+    /// <param name="item">The KeyValuePair to add to the dictionary.</param>
     public void Add(KeyValuePair<string, object> item)
     {
         lock (_door)
             _dict[item.Key] = item.Value;
     }
 
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.Clear"/>.  This is a threadsafe implementation.
+    /// </summary>
     public void Clear()
     {
         lock (_door)
             _dict.Clear();
     }
 
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.ContainsKey(TKey)"/>.  This is a threadsafe implementation.
+    /// </summary>
     public bool Contains(KeyValuePair<string, object> item)
     {
         lock (_door)
             return _dict.Contains(item);
     }
 
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.CopyTo(T[], int)"/>.  This is a threadsafe implementation.
+    /// </summary>
     public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
     {
         lock (_door)
             ((IDictionary<string, object>)_dict).CopyTo(array, arrayIndex);
     }
 
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.Remove(TKey)"/>.  This is a threadsafe implementation.
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public bool Remove(KeyValuePair<string, object> item)
     {
         lock (_door)
             return _dict.Remove(item.Key);
     }
 
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.Count"/>.  This is a threadsafe implementation.
+    /// </summary>
     public int Count
     {
         get
@@ -84,21 +120,36 @@ public class FlexJson : IDictionary<string, object>
                 return _dict.Count;
         }
     }
-
+    
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.IsReadOnly"/>.  For FlexJson, this is always false.
+    /// </summary>
     public bool IsReadOnly => false;
 	
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.this[TKey]"/>.  This is a threadsafe implementation.
+    /// </summary>
     public void Add(string key, object value)
     {
         lock (_door)
             _dict.Add(key, value);
     }
 
+    /// <summary>
+    /// See <see cref="IDictionary{TKey, TValue}.Add(TKey, TValue)"/>.  This is a threadsafe implementation.
+    /// </summary>
     public bool ContainsKey(string key)
     {
         lock (_door)
             return _dict.ContainsKey(key);
     }
 
+    /// <summary>
+    /// Recursively searches for a key.
+    /// </summary>
+    /// <param name="dict">The dictionary to search.</param>
+    /// <param name="key">The key to find.</param>
+    /// <returns>True if the key is contained in the dictionary or any child dictionary.</returns>
     private bool DictionaryContainsKey(IDictionary<string, object> dict, string key)
     {
         if (dict == null)
@@ -486,9 +537,10 @@ public class FlexJson : IDictionary<string, object>
             }
 
         // Even though Rider grays out the (T) as if it's irrelevant code, this is not the case because the return type is dynamic.
+        // Even the compiler complains the type cast is redundant.  Don't listen to it!
         // (dynamic)default == null
         // (bool)default == false
-        // This was causing some non-nullable types to throw Exceptions during casting.
+        // This was causing some non-nullable types to throw Exceptions during casting, albeit very rarely.
         if (value == null)
             return (T)default;
 

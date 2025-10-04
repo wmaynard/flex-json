@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Maynard.Json.Attributes;
+using Maynard.Json.Enums;
 using Maynard.Logging;
 
 namespace Maynard.Json.Serializers;
@@ -29,7 +30,7 @@ public class JsonFlexConverter : JsonConverter<Model>
             string propertyName = reader.GetString();
             reader.Read(); // Move to the property value
 
-            if (mappingInfo.JsonToProperty.TryGetValue(propertyName, out PropertyInfo property))
+            if (propertyName != null && mappingInfo.JsonToProperty.TryGetValue(propertyName, out PropertyInfo property))
             {
                 object value = JsonSerializer.Deserialize(ref reader, property.PropertyType, options);
                 property.SetValue(instance, value);

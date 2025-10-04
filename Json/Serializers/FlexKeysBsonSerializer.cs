@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Maynard.Json.Attributes;
+using Maynard.Json.Enums;
 using Maynard.Logging;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -10,7 +10,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using Maynard.Json.Attributes;
+using Attributes;
 
 public class FlexKeysBsonSerializer<T> : SerializerBase<T> where T : class
 {
@@ -69,7 +69,7 @@ public class FlexKeysBsonSerializer<T> : SerializerBase<T> where T : class
             {
                 policy = flexIgnore.Ignore;
                 if (bsonIgnoreIfNull != null || bsonIgnoreIfDefault != null)
-                    Log.Warn($"Found more than one BSON ignore attributes when preparing serializaiton maps.  {nameof(FlexIgnore)} attributes are more specific and thus have priority.", data: new
+                    Log.Warn($"Found more than one BSON ignore attributes when preparing serialization maps.  {nameof(FlexIgnore)} attributes are more specific and thus have priority.", data: new
                     {
                         Type = typeof(T),
                         Property = prop.Name,
