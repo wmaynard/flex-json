@@ -163,7 +163,7 @@ Boilerplate doesn't need to make your eyes glaze over!  Let `FlexJson` help you 
 
 ### Real World Use Case: chat-service
 
-Our lead frontend engineer once asked if I could pipe a raw JSON blob from the client through to MongoDB directly.  Specifically, we had an in-game chat service, and he wanted to add special attachments to messages.  These might be deep links to a player's items, special formatting rules, or custom emoji sprites - all of which are specific to the game client and have no meaning to the backend.  Other than imposing a raw character limit, the backend didn't really care about the incoming data.
+Our lead gameplay engineer once asked if I could pipe a raw JSON blob from the client through to MongoDB directly.  Specifically, we had an in-game chat service, and he wanted to add special attachments to messages.  These might be deep links to a player's items, special formatting rules, or custom emoji sprites - all of which are specific to the game client and have no meaning to the backend.  Other than imposing a raw character limit, the backend didn't really care about the incoming data.
 
 At that time, all our deserialization required model updates.  If I sent the JsonDocument directly to MongoDB, the Mongo driver serialized it into type / version / binary information and wasn't queryable through MongoDB Atlas / MongoDB Compass.
 
