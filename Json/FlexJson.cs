@@ -23,7 +23,7 @@ public class FlexJson : IDictionary<string, object>
         ValidateOnDeserialize = validate;
     }
     /// <summary>
-    /// If true, any model that's deserialized will run its <see cref="Model.Validate"/> method.  If that model fails
+    /// If true, any model that's deserialized will run its <see cref="FlexModel.Validate"/> method.  If that model fails
     /// its validation, a <see cref="ModelValidationException" /> will be thrown.
     /// </summary>
     public static bool ValidateOnDeserialize { get; set; }
@@ -457,10 +457,10 @@ public class FlexJson : IDictionary<string, object>
             return;
 
         Type t = typeof(T);
-        Type dataModel = typeof(Model);
+        Type dataModel = typeof(FlexModel);
         
         if (t.IsAssignableTo(dataModel))
-            Model.Validate(value);
+            FlexModel.Validate(value);
 
         if (value == null)
             return;
@@ -470,8 +470,8 @@ public class FlexJson : IDictionary<string, object>
         if (!(t.GetElementType()?.IsAssignableTo(dataModel) ?? false))
             return;
         
-        foreach (Model dm in (IEnumerable<Model>) value)
-            Model.Validate(dm);
+        foreach (FlexModel dm in (IEnumerable<FlexModel>) value)
+            FlexModel.Validate(dm);
     }
 
     public T Optional<T>(string key)
@@ -516,7 +516,7 @@ public class FlexJson : IDictionary<string, object>
         ? JsonSerializer.Deserialize(data.Json, type, JsonHelper.SerializerOptions)
         : Convert.ChangeType(obj, type);
 
-    public T ToModel<T>(bool fromDbKeys = false) where T : Model => fromDbKeys 
+    public T ToModel<T>(bool fromDbKeys = false) where T : FlexModel => fromDbKeys 
         ? BsonSerializer.Deserialize<T>(Json)
         : JsonSerializer.Deserialize<T>(Json, JsonHelper.SerializerOptions);
 
@@ -526,7 +526,7 @@ public class FlexJson : IDictionary<string, object>
     /// </summary>
     private dynamic Translate<T>(object value)
     {
-        if (typeof(T).IsAssignableTo(typeof(Model)) && value is string json)
+        if (typeof(T).IsAssignableTo(typeof(FlexModel)) && value is string json)
             try
             {
                 return JsonSerializer.Deserialize<T>(json, JsonHelper.SerializerOptions);

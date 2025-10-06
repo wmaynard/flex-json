@@ -7,17 +7,17 @@ using Maynard.Logging;
 
 namespace Maynard.Json.Serializers;
 
-public class JsonFlexConverter : JsonConverter<Model>
+public class JsonFlexConverter : JsonConverter<FlexModel>
 {
     private readonly Dictionary<Type, PropertyMappingInfo> _typeMappings = new();
 
-    public override Model Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override FlexModel Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("Expected StartObject token");
 
         PropertyMappingInfo mappingInfo = GetOrCreateMappingInfo(typeToConvert);
-        Model instance = (Model)Activator.CreateInstance(typeToConvert, true);
+        FlexModel instance = (FlexModel)Activator.CreateInstance(typeToConvert, true);
 
         while (reader.Read())
         {
@@ -42,7 +42,7 @@ public class JsonFlexConverter : JsonConverter<Model>
         throw new JsonException("Expected EndObject token");
     }
 
-    public override void Write(Utf8JsonWriter writer, Model value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, FlexModel value, JsonSerializerOptions options)
     {
         Type type = value.GetType();
         PropertyMappingInfo mappingInfo = GetOrCreateMappingInfo(type);

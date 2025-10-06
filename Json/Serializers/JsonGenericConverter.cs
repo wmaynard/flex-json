@@ -193,7 +193,7 @@ public class JsonGenericConverter : JsonConverter<FlexJson>
                     WriteJsonValue(ref writer, ref options, null, _value);
                 writer.WriteEndArray();
                 break;
-            case Model asModel:
+            case FlexModel asModel:
                 writer.WriteRawValue(asModel.ToJson());
                 break;
             case MongoException asMongoException:

@@ -8,7 +8,7 @@ using MongoDB.Bson.Serialization.Serializers;
 
 namespace Maynard.Json;
 
-public abstract class Model
+public abstract class FlexModel
 {
     /// <summary>
     /// A self-containing wrapper for use in generating JSON responses for models.  All models should
@@ -24,7 +24,7 @@ public abstract class Model
     {
         try
         {
-            return JsonSerializer.Serialize(this, typeof(Model), JsonHelper.SerializerOptions);
+            return JsonSerializer.Serialize(this, typeof(FlexModel), JsonHelper.SerializerOptions);
         }
         catch (Exception e)
         {
@@ -85,9 +85,9 @@ public abstract class Model
             errors.Add(error);
     }
 
-    public static T FromJSON<T>(string json) where T : Model => JsonSerializer.Deserialize<T>(json, JsonHelper.SerializerOptions);
+    public static T FromJSON<T>(string json) where T : FlexModel => JsonSerializer.Deserialize<T>(json, JsonHelper.SerializerOptions);
 
-    public static implicit operator Model(string json) => FromJSON<Model>(json);
+    public static implicit operator FlexModel(string json) => FromJSON<FlexModel>(json);
 
     /// <summary>
     /// This alias is needed to circumnavigate ambiguous reflection issues for registration.
@@ -116,7 +116,7 @@ public abstract class Model
             .Concat(importedTypes)                                      // Add parent library's types, if any
             .Concat(Assembly.GetExecutingAssembly().GetExportedTypes()) // Add calling assembly's types
             .Where(type => !type.IsAbstract)
-            .Where(type => type.IsAssignableTo(typeof(Model)))
+            .Where(type => type.IsAssignableTo(typeof(FlexModel)))
             .ToArray()
         ?? [];
 
@@ -124,7 +124,7 @@ public abstract class Model
         foreach (Type type in models)
             try
             {
-                MethodInfo info = typeof(Model).GetMethod(nameof(RegisterWithMongo), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                MethodInfo info = typeof(FlexModel).GetMethod(nameof(RegisterWithMongo), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                 MethodInfo generic = info?.MakeGenericMethod(type);
 
                 // TODO: Mongo currently can't process nested data models with generic types
@@ -218,7 +218,7 @@ public abstract class Model
     /// Mongo requires an instance to do this as opposed to using reflection itself, so this method will find the shortest constructor,
     /// attempt to instantiate the type with default parameter values, and return it for use with RegisterWithMongo.
     /// </summary>
-    private static Model CreateFromSmallestConstructor(Type type)
+    private static FlexModel CreateFromSmallestConstructor(Type type)
     {
         ConstructorInfo[] constructors = type.GetConstructors(bindingAttr: BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         ConstructorInfo min = constructors.MinBy(info => info.GetParameters().Length);
@@ -248,6 +248,6 @@ public abstract class Model
             _params.Add(null);
         }
 
-        return (Model)min.Invoke(_params.ToArray());
+        return (FlexModel)min.Invoke(_params.ToArray());
     }
 }
