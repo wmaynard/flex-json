@@ -22,7 +22,7 @@ public class FlexKeysBsonSerializer<T> : SerializerBase<T> where T : class
     public FlexKeysBsonSerializer()
     {
         PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-        
+
         foreach (PropertyInfo prop in properties)
         {
             FlexKeys flexKeys = prop.GetCustomAttribute<FlexKeys>();
@@ -31,7 +31,7 @@ public class FlexKeysBsonSerializer<T> : SerializerBase<T> where T : class
             BsonElementAttribute bsonElement = prop.GetCustomAttribute<BsonElementAttribute>();
             BsonIgnoreIfNullAttribute bsonIgnoreIfNull = prop.GetCustomAttribute<BsonIgnoreIfNullAttribute>();
             BsonIgnoreIfDefaultAttribute bsonIgnoreIfDefault = prop.GetCustomAttribute<BsonIgnoreIfDefaultAttribute>();
-            
+
             string key = JsonNamingPolicy.CamelCase.ConvertName(prop.Name);
             Ignore policy = Ignore.Never;
 
@@ -99,8 +99,7 @@ public class FlexKeysBsonSerializer<T> : SerializerBase<T> where T : class
                 Log.Warn("Found an attempt to override the ignore policy on _id.  This is not allowed and will be ignored.");
                 policy = Ignore.Never;
             }
-                
-
+            
             _bsonToProperty[key] = prop;
             _propertyToBson[prop] = key;
             _propertyIgnorePolicy[prop] = policy;

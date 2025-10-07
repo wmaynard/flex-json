@@ -1,9 +1,14 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Maynard.Json.Attributes;
+using Maynard.Json.Enums;
 using Maynard.Json.Exceptions;
 using Maynard.Json.Utilities;
 using Maynard.Logging;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.Serializers;
 
 namespace Maynard.Json;
@@ -98,7 +103,90 @@ public abstract class FlexModel
         {
             cm.AutoMap();
             cm.SetIgnoreExtraElements(true);
+        
+            PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+        
+            foreach (PropertyInfo prop in properties)
+            {
+                FlexKeys flexKeys = prop.GetCustomAttribute<FlexKeys>();
+                FlexIgnore flexIgnore = prop.GetCustomAttribute<FlexIgnore>();
+                BsonIdAttribute bsonId = prop.GetCustomAttribute<BsonIdAttribute>();
+                BsonElementAttribute bsonElement = prop.GetCustomAttribute<BsonElementAttribute>();
+                BsonIgnoreIfNullAttribute bsonIgnoreIfNull = prop.GetCustomAttribute<BsonIgnoreIfNullAttribute>();
+                BsonIgnoreIfDefaultAttribute bsonIgnoreIfDefault = prop.GetCustomAttribute<BsonIgnoreIfDefaultAttribute>();
+        
+                string key = JsonNamingPolicy.CamelCase.ConvertName(prop.Name);
+                Ignore policy = Ignore.Never;
+        
+                // Set the key
+                if (bsonId != null)
+                {
+                    key = "_id";
+                    if (!string.IsNullOrWhiteSpace(flexKeys?.Bson) || !string.IsNullOrWhiteSpace(bsonElement?.ElementName))
+                        Log.Warn($"Found attempts at overriding the BsonId field for a model via {nameof(FlexKeys)} or {nameof(BsonElement)} attributes.  This is not allowed.", data: new
+                        {
+                            Type = typeof(T),
+                            Property = prop.Name,
+                            FlexKeysBson = flexKeys?.Bson,
+                            BsonElement = bsonElement?.ElementName
+                        });
+                }
+                else if (!string.IsNullOrWhiteSpace(flexKeys?.Bson))
+                {
+                    key = flexKeys.Bson;
+                    if (!string.IsNullOrWhiteSpace(bsonElement?.ElementName))
+                        Log.Warn($"Found two BSON key names when preparing serialization maps.  {nameof(FlexKeys)} attributes are preferred and thus have priority.", data: new
+                        {
+                            Type = typeof(T),
+                            Property = prop.Name,
+                            FlexKeysName = flexKeys.Bson,
+                            BsonElementName = bsonElement.ElementName,
+                            Identical = flexKeys.Bson == bsonElement.ElementName
+                        });
+                }
+                else if (!string.IsNullOrWhiteSpace(bsonElement?.ElementName))
+                    key = bsonElement.ElementName;
+        
+                // Set the ignore policy
+                if (flexIgnore != null)
+                {
+                    policy = flexIgnore.Ignore;
+                    if (bsonIgnoreIfNull != null || bsonIgnoreIfDefault != null)
+                        Log.Warn($"Found more than one BSON ignore attributes when preparing serialization maps.  {nameof(FlexIgnore)} attributes are more specific and thus have priority.", data: new
+                        {
+                            Type = typeof(T),
+                            Property = prop.Name,
+                            FlexIgnore = policy.ToString()
+                        });
+                }
+                else if (bsonIgnoreIfNull != null || bsonIgnoreIfDefault != null)
+                {
+                    if (bsonIgnoreIfNull != null)
+                        policy |= Ignore.WhenBsonNull;
+                    if (bsonIgnoreIfDefault != null)
+                        policy |= Ignore.WhenBsonDefault;
+                    if (flexKeys != null)
+                        Log.Warn($"Found a BsonIgnore attribute in addition to a {nameof(FlexKeys)} attribute.  The latter allows more specificity and is preferred.");
+                }
+                else if (flexKeys != null)
+                    policy = flexKeys.Ignore;
+                else
+                    Log.Warn($"Could not find an ignore policy for a property in a data model.  Best practice is to mark the model with {nameof(FlexKeys)} or {nameof(FlexIgnore)}.", data: new
+                    {
+                        Type = typeof(T),
+                        Property = prop.Name
+                    });
+        
+                if (bsonId != null && policy != Ignore.Never)
+                {
+                    Log.Warn("Found an attempt to override the ignore policy on _id.  This is not allowed and will be ignored.");
+                    policy = Ignore.Never;
+                }
+        
+                cm.MapMember(prop).SetElementName(key);
+            }
         });
+        Log.Verbose("Registered " + typeof(T));
     }
 
     // When using nested custom data structures, Mongo will often be confused about de/serialization of those types.  This can lead to uncaught exceptions
@@ -106,10 +194,11 @@ public abstract class FlexModel
     //      BsonClassMap.RegisterClassMap<YourTypeHere>();
     // However, this is inconsistent with the goal of platform-common.  Common should reduce all of this frustrating boilerplate.
     // We can do this with reflection instead.  It's a slower process, but since this only happens once at Startup it's not significant.
-    // TODO: Do not process this is mongo is disabled
+    // TODO: Do not process this if mongo is disabled
     // TODO: Better error messages
-    internal static void RegisterModelsWithMongo(Type[] importedTypes)
+    public static void RegisterModelsWithMongo(Type[] importedTypes = null)
     {
+        importedTypes ??= [];
         Type[] models = Assembly
             .GetEntryAssembly()
             ?.GetExportedTypes()                                        // Add the project's types 
@@ -120,7 +209,7 @@ public abstract class FlexModel
             .ToArray()
         ?? [];
 
-        List<string> unregisteredTypes = new List<string>();
+        List<string> unregisteredTypes = new();
         foreach (Type type in models)
             try
             {
@@ -153,7 +242,7 @@ public abstract class FlexModel
                 Types = unregisteredTypes
             });
         
-        Log.Verbose("Registered Models with Mongo.");
+        Log.Good("Registered Models with Mongo.");
         RegisterSerializer(models);
     }
 
@@ -223,7 +312,7 @@ public abstract class FlexModel
         ConstructorInfo[] constructors = type.GetConstructors(bindingAttr: BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         ConstructorInfo min = constructors.MinBy(info => info.GetParameters().Length);
 
-        List<object> _params = new List<object>();
+        List<object> _params = new();
         foreach (ParameterInfo info in min.GetParameters())
         {
             // Primitive datatypes
