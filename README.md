@@ -4,7 +4,18 @@ A saner way to work with JSON, especially within the context of working with Mon
 
 ## Project History
 
-I spent three years working as the Lead Platform Engineer at R Studios, a small gaming studio with a tech stack heavily reliant on microservices, JSON, and MongoDB.  Since C# is a strongly typed language, we struggled to consistently serialize generic data to BSON.  MongoDB would store any models we had with their full type information and a lot of junk rather than break them down to primitive values.  FlexJson originated as a way to accept a generic JSON blob from frontend clients, convert it to a `Dictionary<string, object>`, and then serialize it to BSON so that we could query any of that data from MongoDB.
+I spent three years working as the Lead Platform Engineer at R Studios, a small gaming studio with a tech stack heavily reliant on microservices, JSON, and MongoDB.  Since C# is a strongly typed language, we struggled to consistently serialize generic data to BSON.  MongoDB would store any models we had with their full type information and a lot of junk rather than break them down to primitive values.  You can see this with most complex types in C#:
+
+```
+attempts: {
+  "_t": "System.Collections.Generic.List`1[[System.Int64, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]][]",
+  "_v": []
+}
+```
+
+This is a nightmare to query on the backend, and in our case, often broke with library updates since the deserializers would change.
+
+FlexJson originated as a way to accept a generic JSON blob from frontend clients, convert it to a `Dictionary<string, object>`, and then serialize it to BSON so that we could query any of that data from MongoDB.
 
 The project quickly evolved in scope.  With around two dozen microservices, our backend codebase was quickly overwhelmed by `JsonDocument` and `BsonDocument` de/serialization nightmares.  Quality of life improvements were added to reduce the number of decorations we had to add to our models.
 
