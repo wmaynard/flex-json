@@ -44,6 +44,10 @@
           <PackagePath></PackagePath>
         </None>
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Web\" />
+    </ItemGroup>
 
     <Target Name="PushToNuGet" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
         <Exec Command="dotnet nuget push $(PackageOutputPath)\*.nupkg --skip-duplicate --api-key $(NugetApiKey) --source https://api.nuget.org/v3/index.json" />

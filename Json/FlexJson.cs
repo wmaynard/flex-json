@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Maynard.Interfaces;
 using Maynard.Json.Exceptions;
 using Maynard.Json.Utilities;
 using Maynard.Logging;
@@ -10,7 +11,7 @@ using MongoDB.Bson.Serialization;
 
 namespace Maynard.Json;
 
-public class FlexJson : IDictionary<string, object>
+public class FlexJson : IDictionary<string, object>, IAutocaster
 {
     /// <summary>
     /// Configures FlexJson log behavior.  Without capturing the log events, some logging events may throw exceptions.
