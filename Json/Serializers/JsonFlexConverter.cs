@@ -11,6 +11,8 @@ public class JsonFlexConverter : JsonConverter<FlexModel>
 {
     private readonly Dictionary<Type, PropertyMappingInfo> _typeMappings = new();
 
+    public override bool CanConvert(Type typeToConvert) => typeof(FlexModel).IsAssignableFrom(typeToConvert);
+    
     public override FlexModel Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
