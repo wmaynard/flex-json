@@ -39,11 +39,22 @@
           <Pack>True</Pack>
           <PackagePath></PackagePath>
         </None>
+        <None Remove="Tests\**" />
     </ItemGroup>
     
     <ItemGroup>
       <Folder Include=".github\" />
       <Folder Include="Web\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="Tests\**\*.cs" />
+        <EmbeddedResource Remove="Tests\**" />
+        <None Remove="Tests\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <EmbeddedResource Remove="Tests\**" />
     </ItemGroup>
 
     <Target Name="PushToNuGet" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
