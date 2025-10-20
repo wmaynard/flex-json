@@ -41,16 +41,28 @@ public class GithubRegression
             Username = "Joe McFugal",
             Email = "joe.mcfugal@domain.com"
         };
-        FlexJson json = new()
+        FlexJson one = new()
         {
             { "user", user }
         };
-        FlexJson inner = json.Require<FlexJson>("user");
-        Assert.NotNull(inner);
+        FlexJson two = one.Json; // Copy first object, but as a raw JSON string rather than typed.
         
-        User fromInner = inner.ToModel<User>();
-        Assert.Equal(user.Username, fromInner.Username);
-        Assert.Equal(user.Email, fromInner.Email);
+        // Cast the model to FlexJson.
+        FlexJson modelToFlexJson = one.Require<FlexJson>("user");
+        Assert.NotNull(modelToFlexJson);
+        
+        // Guarantee the model equates to the original object.
+        User fromModel = modelToFlexJson.ToModel<User>();
+        Assert.Equal(user.Username, fromModel.Username);
+        Assert.Equal(user.Email, fromModel.Email);
+        
+        // Cast the raw JSON to FlexJson.
+        FlexJson modelToRawJson = two.Require<FlexJson>("user");
+        Assert.NotNull(modelToRawJson);
+        
+        User fromRaw = modelToRawJson.ToModel<User>();
+        Assert.Equal(user.Username, fromRaw.Username);
+        Assert.Equal(user.Email, fromRaw.Email);
     }
 
     [Fact]
