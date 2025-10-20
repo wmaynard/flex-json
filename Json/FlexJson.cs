@@ -434,6 +434,17 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
     {
         T output = (T)Translate<T>(Require(key)) 
             ?? Throw.Ex<T>(new ConverterException($"Unable to cast {GetType().Name}.", typeof(T), onDeserialize: true));
+        
+        
+        
+        if (typeof(T).Name == "User")
+        {
+            Log.Info("------------------------------------");
+            Log.Info($"  AsJson: {ToString()}");
+            Log.Info($"FullName: {typeof(T).FullName}");
+            Log.Info($"     Key: {key}");
+            Log.Info($" Output:", output);
+        }
 
         // Require guarantees enums is a valid value.
         if (typeof(T).IsEnum)
@@ -527,6 +538,11 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
     /// </summary>
     private dynamic Translate<T>(object value)
     {
+        if (typeof(T).Name == "User")
+        {
+            Log.Info("");
+        }
+        
         if (typeof(T).IsAssignableTo(typeof(FlexModel)) && value is string json)
             try
             {
