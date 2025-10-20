@@ -432,6 +432,7 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
 
     public T Require<T>(string key)
     {
+        object value = Require(key);
         T output = (T)Translate<T>(Require(key)) 
             ?? Throw.Ex<T>(new ConverterException($"Unable to cast {GetType().Name}.", typeof(T), onDeserialize: true));
 
@@ -624,6 +625,15 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
                 TypeCode.Int16 => Convert.ToInt16(value),
                 TypeCode.Int32 => Convert.ToInt32(value),
                 TypeCode.Int64 => Convert.ToInt64(value),
+                // This case is particularly ugly, since it's converting a model to JSON and then back to a FlexJson.
+                TypeCode.Object when type == typeof(FlexJson) => value is FlexModel asModel
+                    ? LogAndReturn("FlexJson converted a FlexModel to raw JSON, then to a FlexJson object.", logData: new
+                    {
+                        Help = "This is inefficient and has performance impacts.  This casting required a call to JsonSerializer.Deserialize, then immediately JsonSerializer.Serialize to re-cast it.  Did you mean to call Optional<T>/Require<T> with a different type?",
+                        SourceType = asModel.GetType().FullName,
+                        TargetType = typeof(FlexJson).FullName
+                    }, asModel.ToJson())
+                    : JsonSerializer.Serialize(value, JsonHelper.SerializerOptions), 
                 TypeCode.Object => value is FlexJson asJson
                     ? JsonSerializer.Deserialize<T>(asJson.Json, JsonHelper.SerializerOptions)
                     : (T)value,
@@ -652,4 +662,10 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
 
 
     public string ToJson() => Json;
+
+    private static T LogAndReturn<T>(string message, object logData, T toReturn)
+    {
+        Log.Warn(message, logData);
+        return toReturn;
+    }
 }
