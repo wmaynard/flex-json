@@ -1,5 +1,6 @@
 using FlexJsonTests.Models;
 using Maynard.Json;
+using Maynard.Json.Exceptions;
 
 namespace FlexJsonTests;
 
@@ -50,5 +51,29 @@ public class GithubRegression
         User fromInner = inner.ToModel<User>();
         Assert.Equal(user.Username, fromInner.Username);
         Assert.Equal(user.Email, fromInner.Email);
+    }
+
+    [Fact]
+    public void GH003_RequireThrowsWhenKeyNotFound()
+    {
+        User user = new()
+        {
+            Username = "Joe McFugal",
+            Email = "joe.mcfugal@domain.com"
+        };
+        FlexJson json = new()
+        {
+            { "user", user }
+        };
+        bool thrown = false;
+        try
+        {
+            json.Require<object>("doesntExist");
+        }
+        catch (MissingJsonKeyException)
+        {
+            thrown = true;
+        }
+        Assert.True(thrown);
     }
 }

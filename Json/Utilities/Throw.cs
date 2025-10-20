@@ -1,3 +1,5 @@
+using Maynard.Logging;
+
 namespace Maynard.Json.Utilities;
 
 internal static class Throw
@@ -6,7 +8,12 @@ internal static class Throw
 
     internal static T Ex<T>(Exception ex)
     {
-        OnException?.Invoke(null, ex);
-        return default;
+        if (OnException != null)
+        {
+            OnException.Invoke(null, ex);
+            return default;
+        }
+        Log.Error(ex.Message, ex);
+        throw ex;
     }
 }
