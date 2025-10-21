@@ -11,6 +11,7 @@ using MongoDB.Bson.Serialization;
 
 namespace Maynard.Json;
 
+[Serializable]
 public class FlexJson : IDictionary<string, object>, IAutocaster
 {
     /// <summary>
