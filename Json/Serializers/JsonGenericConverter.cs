@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Maynard.Json.Exceptions;
@@ -205,13 +206,23 @@ public class JsonGenericConverter : JsonConverter<FlexJson>
             default:
                 try
                 {
-                    writer.WriteRawValue(JsonSerializer.Serialize(value, options));
+                    if (HasObjectCycle(value))
+                    {
+                        Log.Warn("Tried to serialize something with an object cycle into JSON.  This is not allowed.  It will be cast to a string instead.", new
+                        {
+                            Help = "Deserializing this value may not be possible.  Consider removing self-referential fields or adding [FlexIgnore] to them to protect against this error.",
+                            DataType = value.GetType(),
+                        });
+                        writer.WriteStringValue(value.ToString());
+                    }
+                    else
+                        writer.WriteRawValue(JsonSerializer.Serialize(value, options));
                 }
                 catch (Exception e)
                 {
                     Log.Error("Could not serialize unexpected data type properly.", data: new
                     {
-                        Information = "A custom data type was likely passed into a FlexJson object and JSON may not have serialized as expected.",
+                        Help = "A custom data type was likely passed into a FlexJson object and JSON may not have serialized as expected.",
                         DataType = value.GetType(),
                         Message = e?.Message
                     });
@@ -219,6 +230,50 @@ public class JsonGenericConverter : JsonConverter<FlexJson>
                 }
                 break;
         }
+    }
+    
+    private static bool HasObjectCycle(object root)
+    {
+        HashSet<object> visited = new (ReferenceEqualityComparer.Instance);
+        return DetectCycle(root, visited);
+    }
+
+    private static bool DetectCycle(object? obj, HashSet<object> visited)
+    {
+        if (obj == null)
+            return false;
+
+        // Primitives, strings, and value types can’t cause cycles
+        Type type = obj.GetType();
+        if (type.IsValueType || type == typeof(string))
+            return false;
+
+        // Already seen this reference → cycle detected
+        if (!visited.Add(obj))
+            return true;
+
+        // Handle enumerable types
+        if (obj is IEnumerable enumerable)
+            return enumerable.Cast<object>().Any(item => DetectCycle(item, visited));
+        
+        // Reflect over properties and fields
+        foreach (PropertyInfo prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            if (prop.CanRead && prop.GetIndexParameters().Length == 0)
+            {
+                object value = null;
+                try
+                {
+                    value = prop.GetValue(obj);
+                } 
+                catch { }
+                if (DetectCycle(value, visited))
+                    return true;
+            }
+
+        return type
+            .GetFields(BindingFlags.Public | BindingFlags.Instance)
+            .Select(field => field.GetValue(obj))
+            .Any(value => DetectCycle(value, visited));
     }
 #endregion WRITE
 }

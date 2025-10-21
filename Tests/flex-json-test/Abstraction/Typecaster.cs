@@ -23,7 +23,6 @@ public abstract class Typecaster<T, TData> where T : Typecaster<T, TData>, new()
                 json[$"key{++count}"] = data;
             
             FlexJson raw = json.Json;
-                
 
             return [json, raw];
         }
@@ -50,8 +49,12 @@ public abstract class Typecaster<T, TData> where T : Typecaster<T, TData>, new()
     private void Casting(FlexJson json)
     {
         foreach (string key in json.Keys)
-            Assert.Equal(json[key], json.Require<TData>(key));
+            Assert.Equal(TryConvert(json[key]), json.Require<TData>(key));
     }
+
+    private static TData TryConvert(object value) => value is TData asTData
+        ? asTData
+        : (TData)Convert.ChangeType(value, typeof(TData));
 
     private void Casting_Collection<TCollection>(FlexJson json) where TCollection : IEnumerable<TData>
     {
@@ -61,7 +64,7 @@ public abstract class Typecaster<T, TData> where T : Typecaster<T, TData>, new()
         object first = json.Values.First();
         TData[] values = typeof(TData[]).IsAssignableFrom(first.GetType())
             ? (TData[])first
-            : ((IEnumerable<object>)first).Select(value => (TData) value).ToArray();
+            : ((IEnumerable<object>)first).Select(TryConvert).ToArray();
 
         TCollection collection = default;
         
@@ -119,8 +122,6 @@ public abstract class Typecaster<T, TData> where T : Typecaster<T, TData>, new()
     }
     
     [Theory, MemberData(nameof(TestData_Collections))]
-    public void IEnumerable(FlexJson json) => Casting_Collection<IEnumerable<TData>>(json);
-    [Theory, MemberData(nameof(TestData_Collections))]
     public void Array(FlexJson json) => Casting_Collection<TData[]>(json);
     [Theory, MemberData(nameof(TestData_Collections))]
     public void List(FlexJson json) => Casting_Collection<List<TData>>(json);
@@ -130,4 +131,9 @@ public abstract class Typecaster<T, TData> where T : Typecaster<T, TData>, new()
     public void Queue(FlexJson json) => Casting_Collection<Queue<TData>>(json);
     [Theory, MemberData(nameof(TestData_Collections))]
     public void Stack(FlexJson json) => Casting_Collection<Stack<TData>>(json);
+    
+    // Interfaces should always throw exceptions; have special handling early on, but because they behave differently
+    // should be kept separate from the other tests.
+    [Theory, MemberData(nameof(TestData_Collections))]
+    public void IEnumerable(FlexJson json) => Casting_Collection<IEnumerable<TData>>(json);
 }

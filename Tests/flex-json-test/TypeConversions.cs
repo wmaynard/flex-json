@@ -109,7 +109,7 @@ public class TypeConversions_DotNetTypes
             TimeSpan.FromHours(12)
         ];
     }
-
+    
     public class Guids : Typecaster<Guids, Guid>
     {
         protected override Guid[] CreateCollection() => [
@@ -125,7 +125,7 @@ public class TypeConversions_DotNetTypes
             Guid.Parse("99999999-9999-9999-9999-999999999999")
         ];
     }
-
+    
     public class Uris : Typecaster<Uris, Uri>
     {
         protected override Uri[] CreateCollection() => [
@@ -141,7 +141,7 @@ public class TypeConversions_DotNetTypes
             new("https://dotnet.microsoft.com")
         ];
     }
-
+    
     public class Versions : Typecaster<Versions, Version>
     {
         protected override Version[] CreateCollection() => [
@@ -174,8 +174,6 @@ public class TypeConversions_DotNetTypes
         ];
     }
 }
-
-
 
 // TODO: Create casters for more standard library types, e.g. DateTime.
 // TODO: Create casters for a few different FlexModels.
