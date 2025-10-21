@@ -561,7 +561,8 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
             try
             {
                 // We're dealing with a collection of objects.  Try to automatically cast it to an array or List.
-                if (typeof(IEnumerable).IsAssignableFrom(type))
+                // TODO: are there other IEnumerables we need to worry about?  What about user-implemented interfaces?
+                if (type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type))
                 {
                     // TODO: This only covers simple arrays and Lists; a collection with multiple generic constraints would break (not likely, but still an edge case)
                     // GetElementType() for arrays, GetGenericArguments() for Collection<T> types.
@@ -660,7 +661,7 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
                 TypeCode.UInt16 => Convert.ToUInt16(value),
                 TypeCode.UInt32 => Convert.ToUInt32(value),
                 TypeCode.UInt64 => Convert.ToUInt64(value),
-                _ => (T) value
+                _ => (T)value
             };
         }
         catch (Exception e)
