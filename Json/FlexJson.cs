@@ -434,7 +434,8 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
 
     public T Require<T>(string key)
     {
-        object value = Require(key);
+        if (typeof(T).IsInterface)
+            Throw.Ex<T>(new ConverterException($"Unable to cast {GetType().Name}.  Interfaces are not valid.", typeof(T), onDeserialize: true));
         T output = (T)Translate<T>(Require(key)) 
             ?? Throw.Ex<T>(new ConverterException($"Unable to cast {GetType().Name}.", typeof(T), onDeserialize: true));
 
@@ -480,6 +481,8 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
 
     public T Optional<T>(string key)
     {
+        if (typeof(T).IsInterface)
+            Throw.Ex<T>(new ConverterException($"Unable to cast {GetType().Name}.  Interfaces are not valid.", typeof(T), onDeserialize: true));
         T output = (T)Translate<T>(Optional(key));
         
         // Make sure to limit enums to only valid values.
