@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Maynard.Interfaces;
@@ -549,30 +550,42 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
 
         Type type = typeof(T);
         Type underlying = Nullable.GetUnderlyingType(type);
+        
         try
         {
+            if (type.IsInterface)
+                throw new NotSupportedException("Unable to cast FlexJson to an interface directly.  Use a concrete type instead.");
             try
             {
                 // We're dealing with a collection of objects.  Try to automatically cast it to an array or List.
-                if (typeof(IEnumerable<object>).IsAssignableFrom(type))
+                if (typeof(IEnumerable).IsAssignableFrom(type))
                 {
                     // TODO: This only covers simple arrays and Lists; a collection with multiple generic constraints would break (not likely, but still an edge case)
                     // GetElementType() for arrays, GetGenericArguments() for Collection<T> types.
-                    Type e = type.GetElementType() ?? type.GetGenericArguments().First();
-
-                    dynamic list = Activator.CreateInstance(typeof(List<>).MakeGenericType(e));
-
-                    // There has to be a cleaner way to do this with LINQ, but have been struggling to get it to work correctly.
-                    // Without the for loop, typing gets messed up.
-                    // TryConvertToModel will automatically try to cast the data to the appropriate Model type if possible.
-                    // Otherwise, it uses System.Convert to attempt a data conversion.
-                    IEnumerable<dynamic> values = ((IEnumerable<dynamic>)value).Select(element => TryConvertToModel(element, e));
-                    foreach (dynamic x in values)
-                        list.Add(x);
-
-                    return type.IsArray
-                        ? list.ToArray()
-                        : list;
+                    Type element = type.GetElementType() ?? type.GetGenericArguments().First();
+                    
+                    if (type.IsArray)
+                    {
+                        int count = ((IEnumerable<object>)value).Count();
+                        object asArray = Activator.CreateInstance(type, count);
+                        for (int index = 0; index < count; index++)
+                            ((Array)asArray)!.SetValue(TryConvertToModel(((IEnumerable<object>)value).ElementAt(index), element), index);
+                        return asArray;
+                    }
+                    
+                    object output = Activator.CreateInstance(type);
+                    Type typedef = type.GetGenericTypeDefinition();
+                    MethodInfo adder = type switch
+                    {
+                        _ when typedef == typeof(List<>) => type.GetMethod(nameof(List<object>.Add)),
+                        _ when typedef == typeof(Stack<>) => type.GetMethod(nameof(Stack<object>.Push)),
+                        _ when typedef == typeof(Queue<>) => type.GetMethod(nameof(Queue<object>.Enqueue)),
+                        _ when typedef == typeof(HashSet<>) => type.GetMethod(nameof(HashSet<object>.Add)),
+                        _ => throw new NotSupportedException("Unable to cast FlexJson to an Enumerable as requested.")
+                    };
+                    foreach (object item in (IEnumerable)value)
+                        adder!.Invoke(output, [TryConvertToModel(item, element)]);
+                    return output;
                 }
             }
             catch (NotSupportedException e)

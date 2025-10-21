@@ -1,4 +1,5 @@
 using Maynard.Json;
+using Maynard.Json.Exceptions;
 
 namespace FlexJsonTests.Abstraction;
 
@@ -54,8 +55,27 @@ public abstract class Typecaster<T, TData> where T : Typecaster<T, TData>, new()
 
     private void Casting_Collection<TCollection>(FlexJson json) where TCollection : IEnumerable<TData>
     {
-        TData[] values = (TData[])json.Values.FirstOrDefault();
-        TCollection collection = json.Require<TCollection>(KEY_COLLECTION);
+        // We need to test two scenarios:
+        //   1) The FlexJson object still contains the type information it was instantiated with.
+        //   2) The FlexJson was loaded from a string and consequently has no type information associated with it.
+        object first = json.Values.First();
+        TData[] values = typeof(TData[]).IsAssignableFrom(first.GetType())
+            ? (TData[])first
+            : ((IEnumerable<object>)first).Select(value => (TData) value).ToArray();
+
+        TCollection collection = default;
+        
+        try
+        {
+            collection = json.Require<TCollection>(KEY_COLLECTION);
+        }
+        catch (ConverterException)
+        {
+            if (!typeof(TCollection).IsInterface)
+                throw;
+            Assert.Equal(collection, default);
+            return;
+        }
         
         Assert.NotNull(values);
         Assert.NotNull(collection);
