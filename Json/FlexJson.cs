@@ -421,7 +421,7 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
     // string raw = "{\"foo\": 123, \"bar\": [\"abc\", 42, 88, true]}";
     // FlexJson json = raw;
     // string backToString = json;
-    public static implicit operator FlexJson(string json) => json != null
+    public static implicit operator FlexJson(string json) => !string.IsNullOrWhiteSpace(json)
         ? JsonSerializer.Deserialize<FlexJson>(json, JsonHelper.SerializerOptions)
         : null;
     public static implicit operator string(FlexJson data) => JsonSerializer.Serialize(data, JsonHelper.SerializerOptions);
