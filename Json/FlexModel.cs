@@ -198,8 +198,22 @@ public abstract class FlexModel
                     Log.Warn("Found an attempt to override the ignore policy on _id.  This is not allowed and will be ignored.");
                     policy = Ignore.Never;
                 }
-        
-                cm.MapMember(prop).SetElementName(key);
+
+                if (policy.HasFlag(Ignore.InBson))
+                {
+                    cm.UnmapMember(prop);
+                    return;
+                }
+
+                BsonMemberMap map = cm.MapMember(prop).SetElementName(key);
+                
+                // Bafflingly, mongo's driver claims IgnoreIfDefault / IgnoreIfNull are mutually exclusive, and throws an
+                // exception if both methods are used together.  Since a nullable type set to default is null, default
+                // has priority.
+                if (policy.HasFlag(Ignore.WhenBsonDefault))
+                    map.SetIgnoreIfDefault(true);
+                else if (policy.HasFlag(Ignore.WhenBsonNull))
+                    map.SetIgnoreIfNull(true);
             }
         });
         _registeredTypes.Add(type);
