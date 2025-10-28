@@ -15,6 +15,8 @@ namespace Maynard.Json;
 
 public abstract class FlexModel
 {
+    private static readonly HashSet<Type> _registeredTypes = new();
+
     /// <summary>
     /// A self-containing wrapper for use in generating JSON responses for models.  All models should
     /// contain their data in a JSON field using their own name.  For example, if we have an object Foo, the JSON
@@ -81,11 +83,11 @@ public abstract class FlexModel
     }
 
     // TODO: Use an interface or make this abstract to force its adoption?
-    protected virtual void Validate(out List<string> errors) => errors = new List<string>();
+    protected virtual void Validate(out List<string> errors) => errors = [];
 
-    protected void Test(bool condition, string error, ref List<string> errors)
+    protected static void Test(bool condition, string error, ref List<string> errors)
     {
-        errors ??= new List<string>();
+        errors ??= [];
         if (!condition)
             errors.Add(error);
     }
@@ -99,12 +101,26 @@ public abstract class FlexModel
     /// </summary>
     private static void RegisterWithMongo<T>()
     {
+        Type type = typeof(T);
+        if (_registeredTypes.Contains(type))
+            return;
+
+        // Recursively register the base type first, if it's a FlexModel and not object.
+        Type baseType = type.BaseType;
+        if (baseType != null && baseType != typeof(FlexModel) && baseType != typeof(object) && typeof(FlexModel).IsAssignableFrom(baseType))
+        {
+            MethodInfo info = typeof(FlexModel).GetMethod(nameof(RegisterWithMongo), BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo generic = info?.MakeGenericMethod(baseType);
+            generic?.Invoke(null, null);
+        }
+
         BsonClassMap.RegisterClassMap<T>(cm =>
         {
             cm.AutoMap();
             cm.SetIgnoreExtraElements(true);
         
-            PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+            // Use DeclaredOnly to ensure we only map properties for the current class in the hierarchy.
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
         
             foreach (PropertyInfo prop in properties)
             {
@@ -186,6 +202,7 @@ public abstract class FlexModel
                 cm.MapMember(prop).SetElementName(key);
             }
         });
+        _registeredTypes.Add(type);
         Log.Verbose("Registered " + typeof(T));
     }
 
@@ -312,7 +329,7 @@ public abstract class FlexModel
         ConstructorInfo[] constructors = type.GetConstructors(bindingAttr: BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         ConstructorInfo min = constructors.MinBy(info => info.GetParameters().Length);
 
-        List<object> _params = new();
+        List<object> _params = [];
         foreach (ParameterInfo info in min.GetParameters())
         {
             // Primitive datatypes
