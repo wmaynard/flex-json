@@ -553,6 +553,10 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
 
         Type type = typeof(T);
         Type underlying = Nullable.GetUnderlyingType(type);
+
+        // If the object's type already matches the target type we can early-out here.
+        if (typeof(T) == value.GetType())
+            return (T)value;
         
         try
         {
