@@ -690,4 +690,27 @@ public class FlexJson : IDictionary<string, object>, IAutocaster
         Log.Warn(message, logData);
         return toReturn;
     }
+
+    /// <summary>
+    /// Initially added in order to support standards such as OAuth2.0, which requires FormData as part of its standard.
+    /// </summary>
+    /// <returns></returns>
+    public FormUrlEncodedContent ConvertToFormData()
+    {
+        try
+        {
+            return new(this
+                .Select(pair => new KeyValuePair<string, string>(pair.Key, Optional<string>(pair.Key)))
+                .ToArray()
+            );
+        }
+        catch (Exception e)
+        {
+            Log.Error("Unable to convert FlexJson to FormUrlEncodedContent; returned value will be empty.", data: new
+            {
+                Message = e.Message
+            });
+            return new([]);
+        }
+    }
 }
