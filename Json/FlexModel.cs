@@ -202,7 +202,7 @@ public abstract class FlexModel
                 if (policy.HasFlag(Ignore.InBson))
                 {
                     cm.UnmapMember(prop);
-                    return;
+                    continue;  // GH#6; This originally was returning, hence why any property after one encountering an Ignore policy was using default serialization
                 }
 
                 BsonMemberMap map = cm.MapMember(prop).SetElementName(key);
