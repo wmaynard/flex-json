@@ -32,7 +32,7 @@ public class JsonFlexConverter : JsonConverter<FlexModel>
             string propertyName = reader.GetString();
             reader.Read(); // Move to the property value
 
-            if (propertyName != null && mappingInfo.JsonToProperty.TryGetValue(propertyName, out PropertyInfo property))
+            if (propertyName != null && mappingInfo.JsonToProperty.TryGetValue(propertyName, out PropertyInfo property) && property.CanWrite)
             {
                 object value = JsonSerializer.Deserialize(ref reader, property.PropertyType, options);
                 property.SetValue(instance, value);
